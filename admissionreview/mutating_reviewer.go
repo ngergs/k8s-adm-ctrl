@@ -9,27 +9,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type PatchResult struct {
-	// Allow determines whether to allow the given API request at all.
-	// Settings this to false means Request and Response should be ignored.
-	Allow bool
+type Patches struct {
 	// Request is the unmarshalled original request object. Returning nil here will yield an empty JSON patch response.
-	// +optional
 	Request interface{}
 	// Response is the modified request object. Returning nil here will yield an empty JSON patch response.
-	// +optional
 	Response interface{}
-	// Status gives detailed information in the case of failure.
-	// +optional
-	Status *metav1.Status
 }
 
 //go:generate mockgen -source=$GOFILE -destination=../${GOPACKAGE}_tests/mock_${GOFILE} -package=${GOPACKAGE}_tests
 type ResourceMutater interface {
 	// Patch receives the raw request JSON representation as []byte. Unmarshalls this and returns the extracted request object.
 	// Furthermore, relevant modifications are applied and the modified response object returned.
-	// Errors should be handled internally and modify the resulting AdmissionResponse accordingly
-	Patch(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *PatchResult
+	// The patches struct pointer might be nil. If it is present all patches have to be processed for the validate result to hold.
+	Patch(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *ValidateResult, patches *Patches)
 }
 
 type MutatingReviewer struct {
@@ -43,17 +35,17 @@ type MutatingReviewer struct {
 // Otherwise the Patch function of the Modifier interface is called, a JSON Patch is constructed from the result
 // and wrapped into an AdmissionResponse.
 func (reviewer *MutatingReviewer) Review(arRequest *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
-	patchResult := reviewer.Mutater.Patch(&arRequest.Kind, arRequest.Object.Raw[:])
-	if !patchResult.Allow || patchResult.Request == nil || patchResult.Response == nil {
+	result, patches := reviewer.Mutater.Patch(&arRequest.Kind, arRequest.Object.Raw[:])
+	if !result.Allow || patches == nil {
 		return &admissionv1.AdmissionResponse{
 			UID:     arRequest.UID,
-			Allowed: patchResult.Allow,
-			Result:  patchResult.Status,
+			Allowed: result.Allow,
+			Result:  result.Status,
 		}
 	}
 
 	// collect changes into JSON Patch if both are given
-	patch, err := jsondiff.Compare(patchResult.Request, patchResult.Response)
+	patch, err := jsondiff.Compare(patches.Request, patches.Response)
 	if err != nil {
 		return &admissionv1.AdmissionResponse{
 			UID:     arRequest.UID,
@@ -73,9 +65,9 @@ func (reviewer *MutatingReviewer) Review(arRequest *admissionv1.AdmissionRequest
 	patchType := admissionv1.PatchType(admissionv1.PatchTypeJSONPatch)
 	return &admissionv1.AdmissionResponse{
 		UID:       arRequest.UID,
-		Allowed:   patchResult.Allow,
+		Allowed:   result.Allow,
 		PatchType: &patchType,
 		Patch:     patchJson,
-		Result:    patchResult.Status,
+		Result:    result.Status,
 	}
 }

@@ -17,7 +17,7 @@ type ValidateResult struct {
 type ResourceValidator interface {
 	// Patch receives the raw request JSON representation as []byte. Unmarshalls this and returns the extracted request object.
 	// Furthermore, relevant modifications are applied and the modified response object returned.
-	// Errors should be handled internally and modify the resulting ValidateResult accordingly
+	// Errors should be handled internally and modify the resulting ValidateResult accordingly.
 	Validate(requestGroupVersioKind *metav1.GroupVersionKind, rawRequest []byte) *ValidateResult
 }
 

@@ -30,18 +30,28 @@ var validateFailureResponse = admissionreview.ValidateResult{
 
 type NamespaceLabelMutater struct{}
 
-func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *admissionreview.PatchResult {
+// unmarshallToNamespace checks if the requestGroupVersionKind fits to a namespace object and unmarshalls the raw request into a namespace struct if this is the case.
+// The presence of the validateResult implies that the skip condition has been fulfilled or an error occured during unmarshalling. namespace is nil then
+func unmarshallToNamespace(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (*corev1.Namespace, *admissionreview.ValidateResult) {
 	if !admissionreview.Contains(compatibleGroupVersionKinds, *requestGroupVersionKind) {
-		return &admissionreview.PatchResult{
+		return nil, &admissionreview.ValidateResult{
 			Allow: true,
 		}
 	}
-	request := corev1.Namespace{}
-	if err := json.Unmarshal(rawRequest, &request); err != nil {
-		return &admissionreview.PatchResult{
+	namespace := corev1.Namespace{}
+	if err := json.Unmarshal(rawRequest, &namespace); err != nil {
+		return nil, &admissionreview.ValidateResult{
 			Allow:  false,
 			Status: admissionreview.GetErrorStatus(http.StatusUnprocessableEntity, "failed to unmarshal into namespace object", err),
 		}
+	}
+	return &namespace, nil
+}
+
+func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (*admissionreview.ValidateResult, *admissionreview.Patches) {
+	request, errorValidateResult := unmarshallToNamespace(requestGroupVersionKind, rawRequest)
+	if errorValidateResult != nil {
+		return errorValidateResult, nil
 	}
 
 	// copy structure to make changes
@@ -54,25 +64,18 @@ func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersion
 		response.Labels[namespaceNameLabelKey] = response.Name
 	}
 
-	return &admissionreview.PatchResult{
-		Allow:    true,
-		Request:  request,
-		Response: response,
-	}
+	return &admissionreview.ValidateResult{
+			Allow: true,
+		}, &admissionreview.Patches{
+			Request:  request,
+			Response: response,
+		}
 }
 
 func (*NamespaceLabelMutater) Validate(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *admissionreview.ValidateResult {
-	if !admissionreview.Contains(compatibleGroupVersionKinds, *requestGroupVersionKind) {
-		return &admissionreview.ValidateResult{
-			Allow: true,
-		}
-	}
-	request := corev1.Namespace{}
-	if err := json.Unmarshal(rawRequest, &request); err != nil {
-		return &admissionreview.ValidateResult{
-			Allow:  false,
-			Status: admissionreview.GetErrorStatus(http.StatusUnprocessableEntity, "failed to unmarshal into namespace object", err),
-		}
+	request, errorValidateResult := unmarshallToNamespace(requestGroupVersionKind, rawRequest)
+	if errorValidateResult != nil {
+		return errorValidateResult
 	}
 
 	if request.Labels == nil {
@@ -81,6 +84,7 @@ func (*NamespaceLabelMutater) Validate(requestGroupVersionKind *metav1.GroupVers
 	_, allow := request.Labels[namespaceNameLabelKey]
 	var status *metav1.Status = nil
 	if !allow {
+		log.Info().Msgf("Request for namespace %v failed validation. The label %v is missing.", request.Name, namespaceNameLabelKey)
 		status = &metav1.Status{
 			Status:  "Failure",
 			Message: fmt.Sprintf("The label %v has to be mandatory set.", namespaceNameLabelKey),

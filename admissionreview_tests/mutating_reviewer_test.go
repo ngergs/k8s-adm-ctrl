@@ -15,10 +15,10 @@ func TestMutatingReviewNotAllowed(t *testing.T) {
 	resourceMutatorMock.
 		EXPECT().
 		Patch(gomock.Eq(groupVersionKind), gomock.Eq(data)).
-		Return(&admissionreview.PatchResult{
+		Return(&admissionreview.ValidateResult{
 			Allow:  false,
 			Status: status,
-		})
+		}, nil)
 
 	reviewer := admissionreview.MutatingReviewer{
 		Mutater: resourceMutatorMock,
@@ -40,8 +40,9 @@ func TestMutatingReviewAllowed(t *testing.T) {
 	resourceMutatorMock.
 		EXPECT().
 		Patch(gomock.Eq(groupVersionKind), gomock.Eq(data)).
-		Return(&admissionreview.PatchResult{
-			Allow:    true,
+		Return(&admissionreview.ValidateResult{
+			Allow: true,
+		}, &admissionreview.Patches{
 			Request:  dataUnmarshalled,
 			Response: dataMutatedUnmarshalled,
 		})
