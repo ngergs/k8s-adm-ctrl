@@ -19,11 +19,11 @@ var compatibleGroupVersionKinds = []metav1.GroupVersionKind{{
 	Kind:    "Namespace",
 }}
 
-var validateFailureResponse = admissionreview.ValidateResult{
+var namespaceLabelMissingResponse = admissionreview.ValidateResult{
 	Allow: false,
 	Status: &metav1.Status{
 		Status:  "Failure",
-		Message: fmt.Sprintf("The label %v has to be mandatory set.", namespaceNameLabelKey),
+		Message: fmt.Sprintf("The label %v is absent, but has to be mandatory set.", namespaceNameLabelKey),
 		Code:    http.StatusUnprocessableEntity,
 	},
 }
@@ -72,27 +72,27 @@ func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersion
 		}
 }
 
+func isNamespaceLabelPresent(labels map[string]string) bool {
+	if labels == nil {
+		return false
+	}
+	_, ok := labels[namespaceNameLabelKey]
+	return ok
+}
+
 func (*NamespaceLabelMutater) Validate(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *admissionreview.ValidateResult {
 	request, errorValidateResult := unmarshallToNamespace(requestGroupVersionKind, rawRequest)
 	if errorValidateResult != nil {
 		return errorValidateResult
 	}
 
-	if request.Labels == nil {
-		return &validateFailureResponse
-	}
-	_, allow := request.Labels[namespaceNameLabelKey]
-	var status *metav1.Status = nil
-	if !allow {
+	if !isNamespaceLabelPresent(request.Labels) {
 		log.Info().Msgf("Request for namespace %v failed validation. The label %v is missing.", request.Name, namespaceNameLabelKey)
-		status = &metav1.Status{
-			Status:  "Failure",
-			Message: fmt.Sprintf("The label %v has to be mandatory set.", namespaceNameLabelKey),
-			Code:    http.StatusUnprocessableEntity,
-		}
+		return &namespaceLabelMissingResponse
 	}
+
+	log.Info().Msgf("Request for namespace %v passed validation. The label %v is present.", request.Name, namespaceNameLabelKey)
 	return &admissionreview.ValidateResult{
-		Allow:  allow,
-		Status: status,
+		Allow: true,
 	}
 }
