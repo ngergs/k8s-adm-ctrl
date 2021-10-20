@@ -1,0 +1,16 @@
+{{- range .Values.admissionControllers -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-{{ .name }}
+  labels:
+    app.kubernetes.io/name: webhook-{{ .name }}
+spec:
+  ports:
+    - port: 443
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: webhook-{{ .name }}
+{{- end }}

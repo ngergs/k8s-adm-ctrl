@@ -1,0 +1,8 @@
+{{- range $ctrl := .Values.admissionControllers -}}
+{{- $webhookConfig := dict "webhookType" "Mutating" "webhooks" $ctrl.mutating "ctrl" $ctrl "namespace" $.Release.Namespace -}}
+{{- include "webhookConfig" $webhookConfig }}
+---
+{{- $webhookConfig = dict "webhookType" "Validating" "webhooks" $ctrl.validating "ctrl" $ctrl "namespace" $.Release.Namespace -}}
+{{- include "webhookConfig" $webhookConfig }}
+---
+{{- end }} 

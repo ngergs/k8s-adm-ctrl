@@ -1,0 +1,22 @@
+admissionControllers:
+  - name: namespace
+    imageName: selfenergy/namespace-label-webhook
+    admissionReviewVersions: ["v1"]
+    mutating:
+      - name: label
+        path: /mutate
+        rules:
+          - operations: ["CREATE","UPDATE"]
+            apiGroups: [""]
+            apiVersions: ["v1"]
+            resources: ["namespaces"]
+            scope: "Cluster"
+    validating:
+      - name: label
+        path: /validate
+        rules:
+          - operations: ["CREATE","UPDATE"]
+            apiGroups: [""]
+            apiVersions: ["v1"]
+            resources: ["namespaces"]
+            scope: "Cluster"

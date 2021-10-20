@@ -1,0 +1,42 @@
+{{- range .Values.admissionControllers -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhook-{{ .name }}
+  labels:
+    app.kubernetes.io/name: webhook-{{ .name }}
+spec:
+  replicas: {{default .replicaCount 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: webhook-{{ .name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: webhook-{{ .name }}
+    spec:
+      serviceAccountName: webhook
+      containers:
+        - name: webhook-{{ .name }}
+          image: {{ .imageName }}
+          imagePullPolicy: Always
+          args: ["-tls_crt","/etc/certs/tls.crt","-tls_priv_key","/etc/certs/tls.key"]
+          ports:
+            - name: http
+              containerPort: {{ default .port 8080 }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTPS
+          securityContext:
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: webhook-cert
+              mountPath: /etc/certs
+      volumes:
+        - name: webhook-cert
+          secret:
+            secretName: webhook-cert-{{ .name }}
+{{- end }}

@@ -1,0 +1,5 @@
+legal
+k8s-admission-ctrl
+example
+mock_*
+*.bak

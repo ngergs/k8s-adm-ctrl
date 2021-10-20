@@ -1,0 +1,18 @@
+{{- range .Values.admissionControllers -}}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: webhook-{{ .name }}
+spec:
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  secretName: webhook-cert-{{ .name }}
+  dnsNames:
+    - webhook-{{ .name }}.{{ $.Release.Namespace }}.svc
+  issuerRef:
+    name: selfsigned-ca-issuer
+    kind: Issuer
+    group: cert-manager.io
+---
+{{- end }}
