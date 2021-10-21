@@ -44,7 +44,7 @@ func (reviewer *MutatingReviewer) Review(arRequest *admissionv1.AdmissionRequest
 		}
 	}
 
-	// collect changes into JSON Patch if both are given
+	// collect changes into JSON Patch
 	patch, err := jsondiff.Compare(patches.Request, patches.Response)
 	if err != nil {
 		return &admissionv1.AdmissionResponse{

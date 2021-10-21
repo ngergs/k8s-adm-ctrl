@@ -35,6 +35,7 @@ spec:
           volumeMounts:
             - name: webhook-cert
               mountPath: /etc/certs
+              readOnly: true
       volumes:
         - name: webhook-cert
           secret:
