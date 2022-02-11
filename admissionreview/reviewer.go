@@ -7,11 +7,25 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=../${GOPACKAGE}_tests/mock_${GOFILE} -package=${GOPACKAGE}_tests
+// Reviewer receives a Kubernetes AdmissionRequest and returns the corresponding AdmissionResponse
+// Errors should be handled internally and modify the resulting AdmissionResponse accordingly
 type Reviewer interface {
-	// Review receives a Kubernetes AdmissionRequest and returns the corresponding AdmissionResponse
-	// Errors should be handled internally and modify the resulting AdmissionResponse accordingly
 	Review(*admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse
+}
+
+// Reviewer receives a Kubernetes AdmissionRequest and returns the corresponding AdmissionResponse
+// Errors should be handled internally and modify the resulting AdmissionResponse accordingly
+type reviewFuncWrapper struct {
+	reviewFunc func(*admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse
+}
+
+func (reviewer *reviewFuncWrapper) Review(arRequest *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
+	return reviewer.reviewFunc(arRequest)
+}
+
+// ReviewFunc is a helper function to wrap a review function into a corresponding object
+func ReviewFunc(reviewFunc func(*admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse) Reviewer {
+	return &reviewFuncWrapper{reviewFunc: reviewFunc}
 }
 
 // GetErrorStatus receives a suggested HTTP (error) status code, an error description as well as

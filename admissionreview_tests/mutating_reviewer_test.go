@@ -4,25 +4,22 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	admissionreview "github.com/selfenergy/k8s-admission-ctrl/admissionreview"
 	"github.com/stretchr/testify/assert"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestMutatingReviewNotAllowed(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	resourceMutatorMock := NewMockResourceMutater(ctrl)
-	resourceMutatorMock.
-		EXPECT().
-		Patch(gomock.Eq(groupVersionKind), gomock.Eq(data)).
-		Return(&admissionreview.ValidateResult{
+	resourceMutaterMock := func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *admissionreview.ValidateResult, patches *admissionreview.Patches) {
+		assert.Equal(t, groupVersionKind, requestGroupVersionKind)
+		assert.Equal(t, data, rawRequest)
+		return &admissionreview.ValidateResult{
 			Allow:  false,
 			Status: status,
-		}, nil)
-
-	reviewer := admissionreview.MutatingReviewer{
-		Mutater: resourceMutatorMock,
+		}, nil
 	}
+
+	reviewer := admissionreview.MutatingReviewer(resourceMutaterMock)
 	testResult := reviewer.Review(arRequest)
 	assert.Equal(t, arResponseFailure, testResult)
 }
@@ -35,21 +32,18 @@ func TestMutatingReviewAllowed(t *testing.T) {
 	err = json.Unmarshal(dataMutated, &dataMutatedUnmarshalled)
 	assert.Nil(t, err)
 
-	ctrl := gomock.NewController(t)
-	resourceMutatorMock := NewMockResourceMutater(ctrl)
-	resourceMutatorMock.
-		EXPECT().
-		Patch(gomock.Eq(groupVersionKind), gomock.Eq(data)).
-		Return(&admissionreview.ValidateResult{
-			Allow: true,
-		}, &admissionreview.Patches{
-			Request:  dataUnmarshalled,
-			Response: dataMutatedUnmarshalled,
-		})
-
-	reviewer := admissionreview.MutatingReviewer{
-		Mutater: resourceMutatorMock,
+	resourceMutaterMock := func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *admissionreview.ValidateResult, patches *admissionreview.Patches) {
+		assert.Equal(t, groupVersionKind, requestGroupVersionKind)
+		assert.Equal(t, data, rawRequest)
+		return &admissionreview.ValidateResult{
+				Allow: true,
+			}, &admissionreview.Patches{
+				Request:  dataUnmarshalled,
+				Response: dataMutatedUnmarshalled,
+			}
 	}
+
+	reviewer := admissionreview.MutatingReviewer(resourceMutaterMock)
 	testResult := reviewer.Review(arRequest)
 	assert.Equal(t, arResponseMutatingSuccess, testResult)
 }

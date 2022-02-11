@@ -11,11 +11,13 @@ import (
 	"github.com/selfenergy/k8s-admission-ctrl/admissionreview"
 )
 
+var tlsCrt = flag.String("tls_crt", "", "Path to the tls certificate")
+var tlsPrivKey = flag.String("tls_priv_key", "", "Path to the tls private key")
+
 func main() {
 	initLogging()
-	tlsCrt, tlsPrivKey := parseInputs()
 	setupHttpHandles()
-	serveHttp(tlsCrt, tlsPrivKey)
+	serveHttp()
 }
 
 // initLogging sets up some zerologging configutations.
@@ -26,14 +28,11 @@ func initLogging() {
 }
 
 // parseInputs read the TLS flags from command line and checks their consistency.
-func parseInputs() (tlsCrt *string, tlsPrivKey *string) {
-	tlsCrt = flag.String("tls_crt", "", "Path to the tls certificate")
-	tlsPrivKey = flag.String("tls_priv_key", "", "Path to the tls private key")
+func init() {
 	flag.Parse()
 	if (*tlsCrt != "" && *tlsPrivKey == "") || (*tlsCrt == "" && *tlsPrivKey != "") {
 		log.Fatal().Msg("Inconsistent configuration. Either specify both the tls-crt and tls-priv-key or neither.")
 	}
-	return
 }
 
 // handleHealthCheck provides a simple health handle that always returns HTTP 200 for GET requests.
@@ -47,20 +46,15 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 // setupHttpHandles wires the relevant http handles together.
 // For this example we just provide a health endpoint and configure our example NamespaceLabelModifier as root handler.
 func setupHttpHandles() {
+	mutater := &NamespaceLabelMutater{}
 	// Adjust this to place your custom handlers
-	http.HandleFunc("/mutate", admissionreview.ToHandler(
-		&admissionreview.MutatingReviewer{
-			Mutater: &NamespaceLabelMutater{},
-		}))
-	http.HandleFunc("/validate", admissionreview.ToHandler(
-		&admissionreview.ValidatingReviewer{
-			Validator: &NamespaceLabelMutater{},
-		}))
+	http.HandleFunc("/mutate", admissionreview.ToHandelFunc(admissionreview.MutatingReviewer(mutater.Patch)))
+	http.HandleFunc("/validate", admissionreview.ToHandelFunc(admissionreview.ValidatingReviewer(mutater.Validate)))
 	http.HandleFunc("/health", handleHealthCheck)
 }
 
 // starts the HTTP server. TLS is activated if tlsCrt is set.
-func serveHttp(tlsCrt *string, tlsPrivKey *string) {
+func serveHttp() {
 	var err error
 	if *tlsCrt != "" {
 		log.Info().Msg("Serving HTTPS")

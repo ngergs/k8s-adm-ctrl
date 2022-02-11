@@ -40,4 +40,5 @@ spec:
         - name: webhook-cert
           secret:
             secretName: webhook-cert-{{ .name }}
+---
 {{- end }}

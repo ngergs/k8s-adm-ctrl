@@ -20,12 +20,12 @@ type httpError struct {
 	HttpResponseStatus int
 }
 
-// ToHandler receives a Reviewer interface and wraps this into a HTTP handler.
+// ToHandlFunc receives a Reviewer interface and wraps this into a HTTP handler.
 // This covers the IO part as well as error logging, HTTP response code handling and the construction
 // of the AdmissionReview response object.
 // Do not use if you do not wish to use zerolog forlogging. GetAdmissionReviewFromHttp is an alternative that
 // provides the relevant IO handling toolings and let the caller handle the HTTP and logging part.
-func ToHandler(reviewer Reviewer) func(w http.ResponseWriter, r *http.Request) {
+func ToHandelFunc(reviewer Reviewer) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		arReview, httpErr := GetAdmissionReviewFromHttp(r)
 		if httpErr != nil {

@@ -16,58 +16,52 @@ type Patches struct {
 	Response interface{}
 }
 
-//go:generate mockgen -source=$GOFILE -destination=../${GOPACKAGE}_tests/mock_${GOFILE} -package=${GOPACKAGE}_tests
-type ResourceMutater interface {
-	// Patch receives the raw request JSON representation as []byte. Unmarshalls this and returns the extracted request object.
-	// Furthermore, relevant modifications are applied and the modified response object returned.
-	// The patches struct pointer might be nil. If it is present all patches have to be processed for the validate result to hold.
-	Patch(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *ValidateResult, patches *Patches)
-}
-
-type MutatingReviewer struct {
-	// Mutater holds the actual object modification logic
-	Mutater ResourceMutater
-}
+// ResourceMutater receives the raw request JSON representation as []byte. Unmarshalls this and returns the extracted request object.
+// Furthermore, relevant modifications are applied and the modified response object returned.
+// The patches struct pointer might be nil. If it is present all patches have to be processed for the validate result to hold.
+type ResourceMutater func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *ValidateResult, patches *Patches)
 
 // Review is the implementation of the Reviewer interface. Checks the GroupVersionKind of the receives request
 // against what the given reviewer.Modifier supports. A miss match will result in a non-modifying response and
 // the allow value set to the value given by reviewer.AllowOnModifierMiss.
 // Otherwise the Patch function of the Modifier interface is called, a JSON Patch is constructed from the result
 // and wrapped into an AdmissionResponse.
-func (reviewer *MutatingReviewer) Review(arRequest *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
-	result, patches := reviewer.Mutater.Patch(&arRequest.Kind, arRequest.Object.Raw[:])
-	if !result.Allow || patches == nil {
-		return &admissionv1.AdmissionResponse{
-			UID:     arRequest.UID,
-			Allowed: result.Allow,
-			Result:  result.Status,
+func MutatingReviewer(mutater ResourceMutater) Reviewer {
+	return ReviewFunc(func(arRequest *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
+		result, patches := mutater(&arRequest.Kind, arRequest.Object.Raw[:])
+		if !result.Allow || patches == nil {
+			return &admissionv1.AdmissionResponse{
+				UID:     arRequest.UID,
+				Allowed: result.Allow,
+				Result:  result.Status,
+			}
 		}
-	}
 
-	// collect changes into JSON Patch
-	patch, err := jsondiff.Compare(patches.Request, patches.Response)
-	if err != nil {
-		return &admissionv1.AdmissionResponse{
-			UID:     arRequest.UID,
-			Allowed: false,
-			Result:  GetErrorStatus(http.StatusInternalServerError, "failed to create JSON patch request and supposed response object", err),
+		// collect changes into JSON Patch
+		patch, err := jsondiff.Compare(patches.Request, patches.Response)
+		if err != nil {
+			return &admissionv1.AdmissionResponse{
+				UID:     arRequest.UID,
+				Allowed: false,
+				Result:  GetErrorStatus(http.StatusInternalServerError, "failed to create JSON patch request and supposed response object", err),
+			}
 		}
-	}
-	patchJson, err := json.Marshal(&patch)
-	if err != nil {
-		return &admissionv1.AdmissionResponse{
-			UID:     arRequest.UID,
-			Allowed: false,
-			Result:  GetErrorStatus(http.StatusInternalServerError, "failed to marshall JSON patch", err),
+		patchJson, err := json.Marshal(&patch)
+		if err != nil {
+			return &admissionv1.AdmissionResponse{
+				UID:     arRequest.UID,
+				Allowed: false,
+				Result:  GetErrorStatus(http.StatusInternalServerError, "failed to marshall JSON patch", err),
+			}
 		}
-	}
-	// construct response
-	patchType := admissionv1.PatchType(admissionv1.PatchTypeJSONPatch)
-	return &admissionv1.AdmissionResponse{
-		UID:       arRequest.UID,
-		Allowed:   result.Allow,
-		PatchType: &patchType,
-		Patch:     patchJson,
-		Result:    result.Status,
-	}
+		// construct response
+		patchType := admissionv1.PatchType(admissionv1.PatchTypeJSONPatch)
+		return &admissionv1.AdmissionResponse{
+			UID:       arRequest.UID,
+			Allowed:   result.Allow,
+			PatchType: &patchType,
+			Patch:     patchJson,
+			Result:    result.Status,
+		}
+	})
 }
