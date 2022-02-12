@@ -5,12 +5,15 @@ metadata:
   name: webhook-{{ .name }}
   labels:
     app.kubernetes.io/name: webhook-{{ .name }}
+    app.kubernetes.io/component: webhook
 spec:
+  type: ClusterIP
   ports:
     - port: 443
-      targetPort: http
+      targetPort: https
       protocol: TCP
-      name: http
+      name: https
   selector:
     app.kubernetes.io/name: webhook-{{ .name }}
+    app.kubernetes.io/component: webhook
 {{- end }}

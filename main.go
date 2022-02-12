@@ -4,31 +4,26 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/rs/zerolog/pkgerrors"
 	"github.com/selfenergy/k8s-admission-ctrl/admissionreview"
 )
 
+var port = flag.Int("port", 8080, "Port on which the container listens for HTTP requests")
 var tlsCrt = flag.String("tls_crt", "", "Path to the tls certificate")
 var tlsPrivKey = flag.String("tls_priv_key", "", "Path to the tls private key")
 
 func main() {
-	initLogging()
 	setupHttpHandles()
 	serveHttp()
 }
 
-// initLogging sets up some zerologging configutations.
-func initLogging() {
-	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-}
-
 // parseInputs read the TLS flags from command line and checks their consistency.
 func init() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	flag.Parse()
 	if (*tlsCrt != "" && *tlsPrivKey == "") || (*tlsCrt == "" && *tlsPrivKey != "") {
 		log.Fatal().Msg("Inconsistent configuration. Either specify both the tls-crt and tls-priv-key or neither.")
@@ -58,10 +53,10 @@ func serveHttp() {
 	var err error
 	if *tlsCrt != "" {
 		log.Info().Msg("Serving HTTPS")
-		err = http.ListenAndServeTLS(":8080", *tlsCrt, *tlsPrivKey, nil)
+		err = http.ListenAndServeTLS(":"+strconv.Itoa(*port), *tlsCrt, *tlsPrivKey, nil)
 	} else {
 		log.Info().Msg("Serving HTTP")
-		err = http.ListenAndServe(":8080", nil)
+		err = http.ListenAndServe(":"+strconv.Itoa(*port), nil)
 	}
 	if err != nil {
 		log.Fatal().Err(err).Msg("HTTP ListenAndServe failed")

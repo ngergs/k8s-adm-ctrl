@@ -6,6 +6,7 @@ metadata:
   name: {{ .ctrl.name }}
   annotations:
     cert-manager.io/inject-ca-from: {{ .namespace }}/selfsigned-ca
+    app.kubernetes.io/component: webhook
 webhooks:
 {{- $base := . -}}
 {{- range $webhook := .webhooks }}
@@ -21,7 +22,7 @@ webhooks:
         path: {{ $webhook.path }}
         {{- end }}
     sideEffects: None
-    timeoutSeconds: 5
+    timeoutSeconds: 10
 {{- end }}
 {{- end }}
 {{- end }}

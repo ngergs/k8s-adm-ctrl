@@ -7,6 +7,6 @@ FROM gcr.io/distroless/static
 COPY --from=build-container /root/k8s-admission-ctrl /app/k8s-admission-ctrl
 COPY legal app/legal
 USER 1000
-EXPOSE 8080
-ENTRYPOINT ["/app/k8s-admission-ctrl"]
+EXPOSE 10250
+ENTRYPOINT ["/app/k8s-admission-ctrl","-port","10250"]
 CMD []
