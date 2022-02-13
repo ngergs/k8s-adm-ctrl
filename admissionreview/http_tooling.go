@@ -27,7 +27,7 @@ type httpError struct {
 // provides the relevant IO handling toolings and let the caller handle the HTTP and logging part.
 func ToHandelFunc(reviewer Reviewer) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		arReview, httpErr := GetAdmissionReviewFromHttp(r)
+		arReview, httpErr := getAdmissionReviewFromHttp(r)
 		if httpErr != nil {
 			log.Error().Err(httpErr.Err).Msg("Error during request parsing")
 			w.WriteHeader(httpErr.HttpResponseStatus)
@@ -49,9 +49,9 @@ func ToHandelFunc(reviewer Reviewer) func(w http.ResponseWriter, r *http.Request
 	}
 }
 
-// GetAdmissionReviewFromHttp receives a HTTP request and handles the IO and unmarshal part
+// getAdmissionReviewFromHttp receives a HTTP request and handles the IO and unmarshal part
 // to extract the AdmissionReview object from it.
-func GetAdmissionReviewFromHttp(r *http.Request) (*admissionv1.AdmissionReview, *httpError) {
+func getAdmissionReviewFromHttp(r *http.Request) (*admissionv1.AdmissionReview, *httpError) {
 	if r.Method != http.MethodPost {
 		return nil, &httpError{fmt.Errorf("unsupported HTTP method: %v", r.Method), http.StatusMethodNotAllowed}
 	}
@@ -67,4 +67,22 @@ func GetAdmissionReviewFromHttp(r *http.Request) (*admissionv1.AdmissionReview, 
 		return nil, &httpError{fmt.Errorf("failed to unmarshal body: %w", err), http.StatusBadRequest}
 	}
 	return &arReview, nil
+}
+
+// UnmarshallAdmissionRequestchecks if the requestGroupVersionKind fits to the provided compatibleGroupVersionKinds and unmarshalls the raw request into a the result pointer if this is the case.
+// The presence of the validateResult implies that the skip condition has been fulfilled (Allow is true) or an error occured during unmarshalling (Allow is false and Status contains the error).
+func UnmarshallAdmissionRequest(compatibleGroupVersionKinds []metav1.GroupVersionKind, result interface{},
+	requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *ValidateResult {
+	if !Contains(compatibleGroupVersionKinds, *requestGroupVersionKind) {
+		return &ValidateResult{
+			Allow: true,
+		}
+	}
+	if err := json.Unmarshal(rawRequest, result); err != nil {
+		return &ValidateResult{
+			Allow:  false,
+			Status: GetErrorStatus(http.StatusUnprocessableEntity, "failed to unmarshal into namespace object", err),
+		}
+	}
+	return nil
 }
