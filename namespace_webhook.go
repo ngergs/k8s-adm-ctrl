@@ -27,15 +27,20 @@ func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersion
 		return validateSkipErrorResult, nil
 	}
 
-	// copy structure to make changes
+	if _, ok := request.Labels[namespaceNameLabelKey]; ok {
+		log.Info().Msgf("For namespace %v the %v label is present, no mutation applied.", request.Name, namespaceNameLabelKey)
+		return &admissionreview.ValidateResult{
+			Allow: true,
+		}, nil
+	}
+
+	// copy structure to make changes for JSON diff later on
 	var response = request.DeepCopy()
 	if response.Labels == nil {
 		response.Labels = make(map[string]string)
 	}
-	if _, ok := response.Labels[namespaceNameLabelKey]; !ok {
-		log.Info().Msgf("For namespace %v the %v label is missing, it has been added.", response.Name, namespaceNameLabelKey)
-		response.Labels[namespaceNameLabelKey] = response.Name
-	}
+	response.Labels[namespaceNameLabelKey] = response.Name
+	log.Info().Msgf("For namespace %v the %v label is missing, it has been added.", response.Name, namespaceNameLabelKey)
 
 	return &admissionreview.ValidateResult{
 			Allow: true,
@@ -45,14 +50,6 @@ func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersion
 		}
 }
 
-func isNamespaceLabelPresent(labels map[string]string) bool {
-	if labels == nil {
-		return false
-	}
-	_, ok := labels[namespaceNameLabelKey]
-	return ok
-}
-
 func (*NamespaceLabelMutater) Validate(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *admissionreview.ValidateResult {
 	var request corev1.Namespace
 	validateSkipErrorResult := admissionreview.UnmarshallAdmissionRequest(compatibleGroupVersionKinds, &request, requestGroupVersionKind, rawRequest)
@@ -60,7 +57,7 @@ func (*NamespaceLabelMutater) Validate(requestGroupVersionKind *metav1.GroupVers
 		return validateSkipErrorResult
 	}
 
-	if !isNamespaceLabelPresent(request.Labels) {
+	if _, ok := request.Labels[namespaceNameLabelKey]; !ok {
 		log.Info().Msgf("Request for namespace %v failed validation. The label %v is missing.", request.Name, namespaceNameLabelKey)
 		return &admissionreview.ValidateResult{
 			Allow: false,
