@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/rs/zerolog/log"
@@ -67,13 +66,9 @@ func GetAdmissionReviewFromHttp(r *http.Request) (*admissionv1.AdmissionReview, 
 	if r.Body == nil {
 		return nil, &httpError{errors.New("body missing"), http.StatusBadRequest}
 	}
-	data, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, &httpError{fmt.Errorf("failed to read body: %w", err), http.StatusInternalServerError}
-	}
 	var arReview admissionv1.AdmissionReview
-	if err := json.Unmarshal(data, &arReview); err != nil {
-		return nil, &httpError{fmt.Errorf("failed to unmarshal body: %w", err), http.StatusBadRequest}
+	if err := json.NewDecoder(r.Body).Decode(&arReview); err != nil {
+		return nil, &httpError{fmt.Errorf("failed to read and unmarshal body: %w", err), http.StatusBadRequest}
 	}
 	return &arReview, nil
 }
