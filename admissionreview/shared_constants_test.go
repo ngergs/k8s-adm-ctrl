@@ -1,4 +1,4 @@
-package admissionreview_tests
+package admissionreview_test
 
 import (
 	admissionv1 "k8s.io/api/admission/v1"

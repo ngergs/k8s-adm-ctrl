@@ -1,4 +1,4 @@
-package admissionreview_tests
+package admissionreview_test
 
 import (
 	"crypto/rand"

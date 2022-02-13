@@ -1,4 +1,4 @@
-package admissionreview_tests
+package admissionreview_test
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestMutatingReviewNotAllowed(t *testing.T) {
-	resourceMutaterMock := func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *admissionreview.ValidateResult, patches *admissionreview.Patches) {
+	resourceMutaterMock := func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *admissionreview.ValidateResult, patch *admissionreview.Patch) {
 		assert.Equal(t, groupVersionKind, requestGroupVersionKind)
 		assert.Equal(t, data, rawRequest)
 		return &admissionreview.ValidateResult{
@@ -32,12 +32,12 @@ func TestMutatingReviewAllowed(t *testing.T) {
 	err = json.Unmarshal(dataMutated, &dataMutatedUnmarshalled)
 	assert.Nil(t, err)
 
-	resourceMutaterMock := func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *admissionreview.ValidateResult, patches *admissionreview.Patches) {
+	resourceMutaterMock := func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *admissionreview.ValidateResult, patch *admissionreview.Patch) {
 		assert.Equal(t, groupVersionKind, requestGroupVersionKind)
 		assert.Equal(t, data, rawRequest)
 		return &admissionreview.ValidateResult{
 				Allow: true,
-			}, &admissionreview.Patches{
+			}, &admissionreview.Patch{
 				Request:  dataUnmarshalled,
 				Response: dataMutatedUnmarshalled,
 			}
