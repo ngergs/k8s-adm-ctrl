@@ -12,31 +12,29 @@ type Reviewer interface {
 	Review(*admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse
 }
 ```
-This interface is supposed to be directly called after the IO part of the HTTP admission review request has been handled. The library provides a function that wraps a Reviewer interface into a HTTP handlefunc.
-```go
-func ToHandelFunc(reviewer Reviewer) func(w http.ResponseWriter, r *http.Request) 
-```
+This interface is supposed to be directly called after the IO part of the HTTP admission review request has been handled.
+The library provides two functions (see next section) that already handles this. For normal usage it is not expected to directly implement this interface.
 
-### Reference implementations
-The library provides two reference implementations of the Reviewer interface in the form of the named function types
+### Reviewer implementations
+Two implementations of the reviewer (and http.Handler interface) corresponding to the two admission controller types are provided via the functions:
 ```go
-type ResourceMutater func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (result *ValidateResult, patches *Patches)
+func MutatingReviewer(mutater ResourceMutater) ReviewerHandler
+func ValidatingReviewer(validator ResourceValidator) ReviewerHandler
+```
+To use them the library user has to provide the implementation of the corresponding named function types, these hold the core mutation/validation logic:
+```go
+type ResourceMutater func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (*ValidateResult, *Patch)
 type ResourceValidator func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *ValidateResult
 ```
-and corresponding functions to wrap these into a struct that implements the Reviewer interface:
-```go
-func MutatingReviewer(mutater ResourceMutater) Reviewer
-func ValidatingReviewer(validator ResourceValidator) Reviewer
-```
-These wrapper functions implement again some generalized logic around the core Mutation/Validation business logic which is encased ihe provided function arguments. Especially the MutatingReviewer wrapper handles the construction of the JSON patch from the ResourceMutater response.
 
 ## Example application
-In the namespace_webhook.go is an example implementation of the ResourceMutater and ResourceValidator functions which hold the core business logic.
+The [namespace_webhook.go](https://github.com/ngergs/k8s-admission-ctrl/blob/main/namespace_webhook.go) is an example implementation of the ResourceMutater and ResourceValidator functions.
 
-The wrapping in the corresponding Review interface implementations and furthermore wrapping to HTTP handles can then be easily setup as demonstrated in the main.go:
+As the wrapping in the corresponding Review interface implementation also implements the http.Handler interface usage together with the http package is simple:
 ```go
-http.HandleFunc("/mutate", admissionreview.ToHandlFunc(admissionreview.MutatingReviewer(mutater.Patch)))
-http.HandleFunc("/validate", admissionreview.ToHandlFunc(admissionreview.ValidatingReviewer(mutater.Validate)))
+mutater := &NamespaceLabelMutater{}
+http.Handle("/mutate", admissionreview.MutatingReviewer(mutater.Patch))
+http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate))
 ```
 
 ## Dockerfile

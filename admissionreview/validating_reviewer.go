@@ -24,7 +24,7 @@ type ResourceValidator func(requestGroupVersionKind *metav1.GroupVersionKind, ra
 // the allow value set to the value given by reviewer.AllowOnModifierMiss.
 // Otherwise the Patch function of the Modifier interface is called, a JSON Patch is constructed from the result
 // and wrapped into an AdmissionResponse.
-func ValidatingReviewer(validator ResourceValidator) Reviewer {
+func ValidatingReviewer(validator ResourceValidator) ReviewerHandler {
 	return ReviewFunc(func(arRequest *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
 		result := validator(&arRequest.Kind, arRequest.Object.Raw[:])
 

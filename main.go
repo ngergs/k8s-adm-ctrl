@@ -39,12 +39,12 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 // setupHttpHandles wires the relevant http handles together.
-// For this example we just provide a health endpoint and configure our example NamespaceLabelModifier as root handler.
+// For this example we just provide a health endpoint and configure our example NamespaceLabelModifier.
 func setupHttpHandles() {
 	mutater := &NamespaceLabelMutater{}
 	// Adjust this to place your custom handlers
-	http.HandleFunc("/mutate", admissionreview.ToHandelFunc(admissionreview.MutatingReviewer(mutater.Patch)))
-	http.HandleFunc("/validate", admissionreview.ToHandelFunc(admissionreview.ValidatingReviewer(mutater.Validate)))
+	http.Handle("/mutate", admissionreview.MutatingReviewer(mutater.Patch))
+	http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate))
 	http.HandleFunc("/health", handleHealthCheck)
 }
 

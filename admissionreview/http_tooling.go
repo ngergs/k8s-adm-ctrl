@@ -27,31 +27,40 @@ type httpError struct {
 // provides the relevant IO handling toolings and let the caller handle the HTTP and logging part.
 func ToHandelFunc(reviewer Reviewer) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		arReview, httpErr := getAdmissionReviewFromHttp(r)
-		if httpErr != nil {
-			log.Error().Err(httpErr.Err).Msg("Error during request parsing")
-			w.WriteHeader(httpErr.HttpResponseStatus)
-			return
-		}
-		response := reviewer.Review(arReview.Request)
-
-		// actually call the admission reviewer and return the response
-		arResponse := admissionv1.AdmissionReview{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "AdmissionReview",
-				APIVersion: "admission.k8s.io/v1",
-			},
-			Response: response,
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(&arResponse)
+		Handle(reviewer, w, r)
 	}
 }
 
-// getAdmissionReviewFromHttp receives a HTTP request and handles the IO and unmarshal part
+// Handle receives a Reviewer interface and the ResponseWriter and Request from the http.Handler interface.
+// This covers the IO part as well as error logging, HTTP response code handling and the construction
+// of the AdmissionReview response object.
+// Do not use if you do not wish to use zerolog forlogging. GetAdmissionReviewFromHttp is an alternative that
+// provides the relevant IO handling toolings and let the caller handle the HTTP and logging part.
+func Handle(reviewer Reviewer, w http.ResponseWriter, r *http.Request) {
+	arReview, httpErr := GetAdmissionReviewFromHttp(r)
+	if httpErr != nil {
+		log.Error().Err(httpErr.Err).Msg("Error during request parsing")
+		w.WriteHeader(httpErr.HttpResponseStatus)
+		return
+	}
+	response := reviewer.Review(arReview.Request)
+
+	// actually call the admission reviewer and return the response
+	arResponse := admissionv1.AdmissionReview{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "AdmissionReview",
+			APIVersion: "admission.k8s.io/v1",
+		},
+		Response: response,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&arResponse)
+}
+
+// GetAdmissionReviewFromHttp receives a HTTP request and handles the IO and unmarshal part
 // to extract the AdmissionReview object from it.
-func getAdmissionReviewFromHttp(r *http.Request) (*admissionv1.AdmissionReview, *httpError) {
+func GetAdmissionReviewFromHttp(r *http.Request) (*admissionv1.AdmissionReview, *httpError) {
 	if r.Method != http.MethodPost {
 		return nil, &httpError{fmt.Errorf("unsupported HTTP method: %v", r.Method), http.StatusMethodNotAllowed}
 	}

@@ -20,7 +20,7 @@ var compatibleGroupVersionKinds = []metav1.GroupVersionKind{{
 
 type NamespaceLabelMutater struct{}
 
-func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (*admissionreview.ValidateResult, *admissionreview.Patches) {
+func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (*admissionreview.ValidateResult, *admissionreview.Patch) {
 	var request corev1.Namespace
 	validateSkipErrorResult := admissionreview.UnmarshallAdmissionRequest(compatibleGroupVersionKinds, &request, requestGroupVersionKind, rawRequest)
 	if validateSkipErrorResult != nil {
@@ -44,7 +44,7 @@ func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersion
 
 	return &admissionreview.ValidateResult{
 			Allow: true,
-		}, &admissionreview.Patches{
+		}, &admissionreview.Patch{
 			Request:  request,
 			Response: response,
 		}
