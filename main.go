@@ -6,9 +6,9 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/ngergs/k8s-adm-ctrl/admissionreview"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/selfenergy/k8s-admission-ctrl/admissionreview"
 )
 
 var port = flag.Int("port", 8080, "Port on which the container listens for HTTP requests")

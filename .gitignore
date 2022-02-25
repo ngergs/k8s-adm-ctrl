@@ -1,5 +1,5 @@
 legal
-k8s-admission-ctrl
+k8s-adm-ctrl
 example
 mock_*
 *.bak

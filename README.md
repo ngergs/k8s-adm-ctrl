@@ -2,7 +2,7 @@
 Some library function to build an [admission controller](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
  The library functions provide some interfaces and helper structures to handle the IO part and e.g. the construction of the JSON patch for mutating controllers.
 
-The compiled binary is around 5MB and the docker image selfenergy/webserver is around 7.5MB.
+The compiled binary is around 5MB and the docker image ngergs/webserver is around 7.5MB.
 
 ## Helm chart
 To actually deploy the admission controller the subfolder helm provides a Helm chart with a more detailed Readme regarding the deployment.
@@ -30,7 +30,7 @@ type ResourceValidator func(requestGroupVersionKind *metav1.GroupVersionKind, ra
 ```
 
 ## Example application
-The [namespace_webhook.go](https://github.com/ngergs/k8s-admission-ctrl/blob/main/namespace_webhook.go) is an example implementation of the ResourceMutater and ResourceValidator functions.
+The [namespace_webhook.go](https://github.com/ngergs/k8s-adm-ctrl/blob/main/namespace_webhook.go) is an example implementation of the ResourceMutater and ResourceValidator functions.
 
 As the wrapping in the corresponding Review interface implementation also implements the http.Handler interface usage together with the http package is simple:
 ```go

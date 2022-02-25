@@ -1,8 +1,8 @@
-module github.com/selfenergy/k8s-admission-ctrl
+module github.com/ngergs/k8s-adm-ctrl
 
 go 1.17
 
-replace github.com/selfenergy/k8s-admission-ctrl => ./
+replace github.com/ngergs/k8s-adm-ctrl => ./
 
 require (
 	github.com/rs/zerolog v1.26.1

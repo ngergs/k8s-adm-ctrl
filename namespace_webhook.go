@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ngergs/k8s-adm-ctrl/admissionreview"
 	"github.com/rs/zerolog/log"
-	"github.com/selfenergy/k8s-admission-ctrl/admissionreview"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

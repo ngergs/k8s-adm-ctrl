@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	admissionreview "github.com/selfenergy/k8s-admission-ctrl/admissionreview"
+	admissionreview "github.com/ngergs/k8s-adm-ctrl/admissionreview"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

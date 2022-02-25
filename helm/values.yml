@@ -1,6 +1,6 @@
 admissionControllers:
   - name: namespace
-    imageName: selfenergy/namespace-label-webhook
+    imageName: ngergs/namespace-label-webhook
     admissionReviewVersions: ["v1"]
     mutating:
       - name: label
