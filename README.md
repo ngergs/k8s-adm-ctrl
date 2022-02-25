@@ -30,7 +30,7 @@ type ResourceValidator func(requestGroupVersionKind *metav1.GroupVersionKind, ra
 ```
 
 ## Example application
-The [namespace_webhook.go](https://github.com/ngergs/k8s-adm-ctrl/blob/main/namespace_webhook.go) is an example implementation of the ResourceMutater and ResourceValidator functions.
+The [namespace_webhook.go](namespace_webhook.go) is an example implementation of the ResourceMutater and ResourceValidator functions.
 
 As the wrapping in the corresponding Review interface implementation also implements the http.Handler interface usage together with the http package is simple:
 ```go
