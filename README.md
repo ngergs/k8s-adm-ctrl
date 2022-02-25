@@ -2,6 +2,8 @@
 Some library function to build an [admission controller](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
  The library functions provide some interfaces and helper structures to handle the IO part and e.g. the construction of the JSON patch for mutating controllers.
 
+The compiled binary is around 5MB and the docker image selfenergy/webserver is around 7.5MB.
+
 ## Helm chart
 To actually deploy the admission controller the subfolder helm provides a Helm chart with a more detailed Readme regarding the deployment.
 

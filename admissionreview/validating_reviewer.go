@@ -5,7 +5,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-//go:generate mockgen -source=$GOFILE -destination=../${GOPACKAGE}_tests/mock_${GOFILE} -package=${GOPACKAGE}_tests
+// ValidateResult is the returned result from the validation process.
 type ValidateResult struct {
 	// Allow determines whether to allow the given API request at all.
 	Allow bool
@@ -19,7 +19,7 @@ type ValidateResult struct {
 // Errors should be handled internally and modify the resulting ValidateResult accordingly.
 type ResourceValidator func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *ValidateResult
 
-// Review is the implementation of the Reviewer interface. Checks the GroupVersionKind of the receives request
+// ValidatingReviewer is the implementation of the ReviewerHandler interface. Checks the GroupVersionKind of the receives request
 // against what the given reviewer.Modifier supports. A miss match will result in a non-modifying response and
 // the allow value set to the value given by reviewer.AllowOnModifierMiss.
 // Otherwise the Patch function of the Modifier interface is called, a JSON Patch is constructed from the result

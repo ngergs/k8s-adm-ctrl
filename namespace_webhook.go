@@ -18,8 +18,11 @@ var compatibleGroupVersionKinds = []metav1.GroupVersionKind{{
 	Kind:    "Namespace",
 }}
 
+// NamespaceLabelMutater is an example struct that implements the admissionreview.ResourceMutater and admissionreview.ResourceValidator interfaces
+// to add a namespaceLabelKey if absent.
 type NamespaceLabelMutater struct{}
 
+// Patch implements the admissionreview.ResourceMutater interface and serves as an example implementation to add a namespaceLabelKey if absent.
 func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (*admissionreview.ValidateResult, *admissionreview.Patch) {
 	var request corev1.Namespace
 	validateSkipErrorResult := admissionreview.UnmarshallAdmissionRequest(compatibleGroupVersionKinds, &request, requestGroupVersionKind, rawRequest)
@@ -50,6 +53,7 @@ func (*NamespaceLabelMutater) Patch(requestGroupVersionKind *metav1.GroupVersion
 		}
 }
 
+// Validate implements the admissionreview.ResourceValidator interface and serves as an example implementation to check whethera namespaceLabelKey is present.
 func (*NamespaceLabelMutater) Validate(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *admissionreview.ValidateResult {
 	var request corev1.Namespace
 	validateSkipErrorResult := admissionreview.UnmarshallAdmissionRequest(compatibleGroupVersionKinds, &request, requestGroupVersionKind, rawRequest)

@@ -1,4 +1,4 @@
-// provides methods to handle Kubernetes admission review requests for webhook microservices
+// Package admissionreview provides methods to handle Kubernetes admission review requests for webhook microservices
 package admissionreview
 
 import (
@@ -19,7 +19,7 @@ type httpError struct {
 	HttpResponseStatus int
 }
 
-// ToHandlFunc receives a Reviewer interface and wraps this into a HTTP handler.
+// ToHandelFunc receives a Reviewer interface and wraps this into a HTTP handler.
 // This covers the IO part as well as error logging, HTTP response code handling and the construction
 // of the AdmissionReview response object.
 // Do not use if you do not wish to use zerolog forlogging. GetAdmissionReviewFromHttp is an alternative that
@@ -73,8 +73,8 @@ func GetAdmissionReviewFromHttp(r *http.Request) (*admissionv1.AdmissionReview, 
 	return &arReview, nil
 }
 
-// UnmarshallAdmissionRequestchecks if the requestGroupVersionKind fits to the provided compatibleGroupVersionKinds and unmarshalls the raw request into a the result pointer if this is the case.
-// The presence of the validateResult implies that the skip condition has been fulfilled (Allow is true) or an error occured during unmarshalling (Allow is false and Status contains the error).
+// UnmarshallAdmissionRequest checks if the requestGroupVersionKind fits to the provided compatibleGroupVersionKinds and unmarshalls the raw request into a the result pointer if this is the case.
+// The presence of the validateResult implies that the skip condition has been fulfilled (Allow is true) or an error occurred during unmarshalling (Allow is false and Status contains the error).
 func UnmarshallAdmissionRequest(compatibleGroupVersionKinds []metav1.GroupVersionKind, result interface{},
 	requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *ValidateResult {
 	if !Contains(compatibleGroupVersionKinds, *requestGroupVersionKind) {

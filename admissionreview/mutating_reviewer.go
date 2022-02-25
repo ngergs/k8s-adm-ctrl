@@ -22,7 +22,7 @@ type Patch struct {
 // The patches struct pointer might be nil. If it is present all patches have to be processed for the validate result to hold.
 type ResourceMutater func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (*ValidateResult, *Patch)
 
-// Review is the implementation of the Reviewer interface. Checks the GroupVersionKind of the receives request
+// MutatingReviewer is the implementation of the ReviewerHandler interface. Checks the GroupVersionKind of the receives request
 // against what the given reviewer.Modifier supports. A miss match will result in a non-modifying response and
 // the allow value set to the value given by reviewer.AllowOnModifierMiss.
 // Otherwise the Patch function of the Modifier interface is called, a JSON Patch is constructed from the result
