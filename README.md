@@ -1,5 +1,7 @@
 # Admission controller toolkit
-Some library function to build an [admission controller](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
+ **This library toolkit uses generics. Therefore, go version 1.18+ is required.**
+
+Library function to build an [admission controller](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
  The library functions provide some interfaces and helper structures to handle the IO part and e.g. the construction of the JSON patch for mutating controllers.
 
 The compiled binary is around 5MB and the docker image ngergs/webserver is around 7.5MB.
@@ -18,15 +20,15 @@ This interface is supposed to be directly called after the IO part of the HTTP a
 The library provides two functions (see next section) that already handles this. For normal usage it is not expected to directly implement this interface.
 
 ### Reviewer implementations
-Two implementations of the reviewer (and http.Handler interface) corresponding to the two admission controller types are provided via the functions:
+Two implementations of the reviewer (and http.Handler interface) corresponding to the two admission controller types are provided via the generic functions:
 ```go
-func MutatingReviewer(mutater ResourceMutater) ReviewerHandler
-func ValidatingReviewer(validator ResourceValidator) ReviewerHandler
+func MutatingReviewer[T any](mutater ResourceMutater[T]) ReviewerHandler
+func ValidatingReviewer[T any](validator ResourceValidator[T]) ReviewerHandler
 ```
 To use them the library user has to provide the implementation of the corresponding named function types, these hold the core mutation/validation logic:
 ```go
-type ResourceMutater func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) (*ValidateResult, *Patch)
-type ResourceValidator func(requestGroupVersionKind *metav1.GroupVersionKind, rawRequest []byte) *ValidateResult
+type ResourceMutater[T any] func(request *T) (*ValidateResult, *Patch[T])
+type ResourceValidator[T any] func(request *T) *ValidateResult
 ```
 
 ## Example application
@@ -35,8 +37,8 @@ The [namespace_webhook.go](namespace_webhook.go) is an example implementation of
 As the wrapping in the corresponding Review interface implementation also implements the http.Handler interface usage together with the http package is simple:
 ```go
 mutater := &NamespaceLabelMutater{}
-http.Handle("/mutate", admissionreview.MutatingReviewer(mutater.Patch))
-http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate))
+http.Handle("/mutate", admissionreview.MutatingReviewer(mutater.Patch, compatibleGroupVersionKind))
+http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate, compatibleGroupVersionKind))
 ```
 
 ## Dockerfile

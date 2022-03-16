@@ -1,13 +1,16 @@
-FROM golang:alpine as build-container
-COPY . /root/
+FROM golang:1.18-alpine as build-container
+COPY . /root/app
 WORKDIR /root
-RUN CGO_ENABLED=0 GOOD=linux GOARCH=amd64 go build -a --ldflags '-s -w' && \
-go get github.com/google/go-licenses && \
-go-licenses save ./... --save_path=legal
+
+RUN apk --no-cache add git && \
+  apk --no-cache add git && \
+  cd app && \
+  CGO_ENABLED=0 GOOD=linux GOARCH=amd64 go build -a --ldflags '-s -w' && \
+  go-licenses save ./... --save_path=legal
 
 FROM gcr.io/distroless/static
-COPY --from=build-container /root/k8s-adm-ctrl /app/k8s-adm-ctrl
-COPY --from=build-container /root/legal /app/legal
+COPY --from=build-container /root/app/k8s-adm-ctrl /app/k8s-adm-ctrl
+COPY --from=build-container /root/app/legal /app/legal
 USER 1000
 EXPOSE 10250
 ENTRYPOINT ["/app/k8s-adm-ctrl","-port","10250"]

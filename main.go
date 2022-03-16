@@ -43,8 +43,8 @@ func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 func setupHttpHandles() {
 	mutater := &NamespaceLabelMutater{}
 	// Adjust this to place your custom handlers
-	http.Handle("/mutate", admissionreview.MutatingReviewer(mutater.Patch))
-	http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate))
+	http.Handle("/mutate", admissionreview.MutatingReviewer(mutater.Patch, compatibleGroupVersionKind))
+	http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate, compatibleGroupVersionKind))
 	http.HandleFunc("/health", handleHealthCheck)
 }
 

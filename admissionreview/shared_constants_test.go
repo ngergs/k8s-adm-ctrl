@@ -6,6 +6,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
+type dataType struct {
+	Test  string `json:"test,omitempty"`
+	Test2 string `json:"test2,omitempty"`
+}
+
 var data = []byte("{\"test\":\"123\"}")
 var dataMutated = []byte("{\"test\":\"123\", \"test2\":\"234\"}")
 var dataPatch = []byte("[{\"op\":\"add\",\"path\":\"/test2\",\"value\":\"234\"}]")

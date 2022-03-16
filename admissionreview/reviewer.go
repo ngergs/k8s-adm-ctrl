@@ -52,9 +52,9 @@ func GetErrorStatus(httpStatus int32, errDiscription string, err error) *metav1.
 }
 
 // Contains checks if the obj argument is contained in the slice argument
-func Contains(slice []metav1.GroupVersionKind, obj metav1.GroupVersionKind) bool {
+func Contains(slice []*metav1.GroupVersionKind, obj *metav1.GroupVersionKind) bool {
 	for _, el := range slice {
-		if el == obj {
+		if obj != nil && *el == *obj {
 			return true
 		}
 	}
