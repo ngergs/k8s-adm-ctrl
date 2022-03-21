@@ -42,4 +42,4 @@ http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate, co
 ```
 
 ## Dockerfile
-The provided Dockerfile builds the application using the official golang alpine image and then wraps the application into an alpine Linux server image which ends up at around ~20MB image size.
+The provided Dockerfile builds the application using the official golang alpine image and then copies the statically linked application binary into an distroless image which ends up at around ~16MB image size.

@@ -3,7 +3,7 @@ COPY . /root/app
 WORKDIR /root
 
 RUN apk --no-cache add git && \
-  apk --no-cache add git && \
+  go install github.com/google/go-licenses@latest && \
   cd app && \
   CGO_ENABLED=0 GOOD=linux GOARCH=amd64 go build -a --ldflags '-s -w' && \
   go-licenses save ./... --save_path=legal
