@@ -7,11 +7,11 @@ import (
 
 // ValidateResult is the returned result from the validation process.
 type ValidateResult struct {
-	// Allow determines whether to allow the given API request at all.
-	Allow bool
 	// Status gives detailed information in the case of failure.
 	// +optional
 	Status *metav1.Status
+	// Allow determines whether to allow the given API request at all.
+	Allow bool
 }
 
 // ResourceValidator receives the raw request JSON representation as []byte. Unmarshalls this and returns the extracted request object.
