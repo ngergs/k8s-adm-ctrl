@@ -7,7 +7,7 @@ Library function to build an [admission controller](https://kubernetes.io/docs/r
 The compiled binary is around 14MB and the example docker image is around 16MB.
 
 ## Helm chart
-To actually deploy the admission controller the subfolder helm provides a Helm chart with a more detailed Readme regarding the deployment.
+To actually deploy the admission controller [helm example](examples/helm) provides a Helm chart with a more detailed Readme regarding the deployment.
 
 ## Interfaces
 ### Reviewer
@@ -32,7 +32,7 @@ type ResourceValidator[T any] func(request *T) *ValidateResult
 ```
 
 ## Example application
-The [namespace_webhook.go](namespace_webhook.go) is an example implementation of the ResourceMutater and ResourceValidator functions.
+The [namespace admission controller](examples/cmd/namespace) is an example implementation of the ResourceMutater and ResourceValidator functions.
 
 As the wrapping in the corresponding Review interface implementation also implements the http.Handler interface usage together with the http package is simple:
 ```go
@@ -42,4 +42,4 @@ http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate, co
 ```
 
 ## Dockerfile
-The provided Dockerfile builds the application using the official golang alpine image and then copies the statically linked application binary into an distroless image which ends up at around ~16MB image size.
+The [example Dockerfile](examples/build/Dockerfile) builds the application using the official golang alpine image and then copies the statically linked application binary into an distroless image which ends up at around ~16MB image size.

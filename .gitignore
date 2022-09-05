@@ -1,6 +1,6 @@
 .idea
 legal
-k8s-adm-ctrl
 example
 mock_*
 *.bak
+/namespace
