@@ -21,7 +21,7 @@ var compatibleGroupVersionKind = &metav1.GroupVersionKind{
 var validationAllow = &admissionreview.ValidateResult{
 	Allow: true,
 }
-var labelAbsendValidationError = &admissionreview.ValidateResult{
+var labelAbsentValidationError = &admissionreview.ValidateResult{
 	Allow: false,
 	Status: &metav1.Status{
 		Status:  "Failure",
@@ -30,12 +30,12 @@ var labelAbsendValidationError = &admissionreview.ValidateResult{
 	},
 }
 
-// NamespaceLabelMutater is an example struct that implements the admissionreview.ResourceMutater and admissionreview.ResourceValidator interfaces
+// namespaceLabelMutater is an example struct that implements the admissionreview.ResourceMutater and admissionreview.ResourceValidator interfaces
 // to add a namespaceLabelKey if absent.
-type NamespaceLabelMutater struct{}
+type namespaceLabelMutater struct{}
 
 // Patch implements the admissionreview.ResourceMutater interface and serves as an example implementation to add a namespaceLabelKey if absent.
-func (*NamespaceLabelMutater) Patch(request *corev1.Namespace) (*admissionreview.ValidateResult, *admissionreview.Patch[corev1.Namespace]) {
+func (*namespaceLabelMutater) Patch(request *corev1.Namespace) (*admissionreview.ValidateResult, *admissionreview.Patch[corev1.Namespace]) {
 	if _, ok := request.Labels[namespaceNameLabelKey]; ok {
 		log.Info().Msgf("For namespace %v the %v label is present, no mutation applied.", request.Name, namespaceNameLabelKey)
 		return validationAllow, nil
@@ -44,7 +44,7 @@ func (*NamespaceLabelMutater) Patch(request *corev1.Namespace) (*admissionreview
 	// copy structure to make changes for JSON diff later on
 	var response = request.DeepCopy()
 	if response.Labels == nil {
-		response.Labels = make(map[string]string)
+		response.Labels = make(map[string]string, 1)
 	}
 	response.Labels[namespaceNameLabelKey] = response.Name
 	log.Info().Msgf("For namespace %v the %v label is missing, it has been added.", response.Name, namespaceNameLabelKey)
@@ -57,10 +57,10 @@ func (*NamespaceLabelMutater) Patch(request *corev1.Namespace) (*admissionreview
 }
 
 // Validate implements the admissionreview.ResourceValidator interface and serves as an example implementation to check whethera namespaceLabelKey is present.
-func (*NamespaceLabelMutater) Validate(request *corev1.Namespace) *admissionreview.ValidateResult {
+func (*namespaceLabelMutater) Validate(request *corev1.Namespace) *admissionreview.ValidateResult {
 	if _, ok := request.Labels[namespaceNameLabelKey]; !ok {
 		log.Info().Msgf("Request for namespace %v failed validation. The label %v is missing.", request.Name, namespaceNameLabelKey)
-		return labelAbsendValidationError
+		return labelAbsentValidationError
 	}
 
 	log.Info().Msgf("Request for namespace %v passed validation. The label %v is present.", request.Name, namespaceNameLabelKey)

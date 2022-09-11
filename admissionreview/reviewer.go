@@ -8,8 +8,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Reviewer receives a Kubernetes AdmissionRequest and returns the corresponding AdmissionResponse
-// Errors should be handled internally and modify the resulting AdmissionResponse accordingly
+// Reviewer receives a Kubernetes AdmissionRequest and returns the corresponding admissionResponse
+// Errors should be handled internally and modify the resulting admissionResponse accordingly
 type Reviewer interface {
 	Review(*admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse
 }
@@ -21,8 +21,8 @@ type ReviewerHandler interface {
 	http.Handler
 }
 
-// Reviewer receives a Kubernetes AdmissionRequest and returns the corresponding AdmissionResponse
-// Errors should be handled internally and modify the resulting AdmissionResponse accordingly.
+// Reviewer receives a Kubernetes AdmissionRequest and returns the corresponding admissionResponse
+// Errors should be handled internally and modify the resulting admissionResponse accordingly.
 // Implements the reviewer and http.Handler interface.
 type reviewFuncWrapper struct {
 	reviewFunc func(*admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse
