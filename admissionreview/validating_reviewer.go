@@ -35,11 +35,10 @@ type ResourceValidator[T any] func(request *T) *ValidateResult
 // and wrapped into an admissionResponse.
 func ValidatingReviewer[T any](validator ResourceValidator[T], compatibleGroupVersionKinds ...*metav1.GroupVersionKind) ReviewerHandler {
 	return ReviewFunc(func(arRequest *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
-		var request T
-		skipValidateResult := UnmarshallAdmissionRequest(&request, arRequest.Object.Raw, compatibleGroupVersionKinds, &arRequest.Kind)
-		if skipValidateResult != nil {
-			return skipValidateResult.admissionResponse(arRequest.UID)
+		request, skipValidate := UnmarshallAdmissionRequest[T](arRequest.Object.Raw, compatibleGroupVersionKinds, &arRequest.Kind)
+		if skipValidate != nil {
+			return skipValidate.admissionResponse(arRequest.UID)
 		}
-		return validator(&request).admissionResponse(arRequest.UID)
+		return validator(request).admissionResponse(arRequest.UID)
 	})
 }

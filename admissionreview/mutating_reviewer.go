@@ -32,12 +32,11 @@ type ResourceMutater[T any] func(request *T) (*ValidateResult, *Patch[T])
 // and wrapped into an admissionResponse.
 func MutatingReviewer[T any](mutater ResourceMutater[T], compatibleGroupVersionKinds ...*metav1.GroupVersionKind) ReviewerHandler {
 	return ReviewFunc(func(arRequest *admissionv1.AdmissionRequest) *admissionv1.AdmissionResponse {
-		var request T
-		skipMutateResult := UnmarshallAdmissionRequest(&request, arRequest.Object.Raw, compatibleGroupVersionKinds, &arRequest.Kind)
-		if skipMutateResult != nil {
-			return skipMutateResult.admissionResponse(arRequest.UID)
+		request, skipMutate := UnmarshallAdmissionRequest[T](arRequest.Object.Raw, compatibleGroupVersionKinds, &arRequest.Kind)
+		if skipMutate != nil {
+			return skipMutate.admissionResponse(arRequest.UID)
 		}
-		result, patches := mutater(&request)
+		result, patches := mutater(request)
 		if !result.Allow || patches == nil {
 			return result.admissionResponse(arRequest.UID)
 		}

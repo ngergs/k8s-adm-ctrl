@@ -54,7 +54,12 @@ func Handle(reviewer Reviewer, w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(&arResponse)
+	err := json.NewEncoder(w).Encode(&arResponse)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to decode response")
+		// try to adjust response, depends on the error details if this has an effect
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 // getAdmissionReviewFromHttp receives a HTTP request and handles the IO and unmarshal part
@@ -75,17 +80,18 @@ func getAdmissionReviewFromHttp(r *http.Request) (*admissionv1.AdmissionReview, 
 
 // UnmarshallAdmissionRequest checks if the requestGroupVersionKind fits to the provided selector and unmarshalls the raw request into a the result pointer if this is the case.
 // The presence of the validateResult implies that the skip condition has been fulfilled (Allow is true) or an error occurred during unmarshalling (Allow is false and Status contains the error).
-func UnmarshallAdmissionRequest(result interface{}, rawRequest []byte, compatibleGroupVersionKinds []*metav1.GroupVersionKind, requestGroupVersionKind *metav1.GroupVersionKind) *ValidateResult {
+func UnmarshallAdmissionRequest[T any](rawRequest []byte, compatibleGroupVersionKinds []*metav1.GroupVersionKind, requestGroupVersionKind *metav1.GroupVersionKind) (request *T, validateResult *ValidateResult) {
 	if !Contains(compatibleGroupVersionKinds, requestGroupVersionKind) {
-		return &ValidateResult{
+		return nil, &ValidateResult{
 			Allow: true,
 		}
 	}
-	if err := json.Unmarshal(rawRequest, result); err != nil {
-		return &ValidateResult{
+	var result T
+	if err := json.Unmarshal(rawRequest, &result); err != nil {
+		return nil, &ValidateResult{
 			Allow:  false,
 			Status: GetErrorStatus(http.StatusUnprocessableEntity, "failed to unmarshal into namespace object", err),
 		}
 	}
-	return nil
+	return &result, nil
 }
