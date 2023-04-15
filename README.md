@@ -2,7 +2,8 @@
  **This library toolkit uses generics. Therefore, go version 1.18+ is required.**
 
 Library function to build an [admission controller](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/).
- The library functions provide some interfaces and helper structures to handle the IO part and e.g. the construction of the JSON patch for mutating controllers.
+The library functions provide some interfaces and helper structures to handle the IO part and e.g. the construction of the JSON patch for mutating controllers.
+The target main use case are admission controllers that target a single resource.
 
 The compiled binary is around 14MB and the example docker image is around 16MB.
 
