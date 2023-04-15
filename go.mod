@@ -5,6 +5,7 @@ go 1.20
 replace github.com/ngergs/k8s-adm-ctrl => ./
 
 require (
+	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/rs/zerolog v1.29.1
 	github.com/stretchr/testify v1.8.1
 	github.com/wI2L/jsondiff v0.3.0
@@ -14,7 +15,6 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
