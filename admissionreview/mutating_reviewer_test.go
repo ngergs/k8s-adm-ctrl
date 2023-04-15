@@ -10,7 +10,6 @@ import (
 
 func TestMutatingReviewNotAllowed(t *testing.T) {
 	resourceMutaterMock := func(request *dataType) (*admissionreview.ValidateResult, *admissionreview.Patch[dataType]) {
-		//assert.Equal(t, *&arRequest.Object, *reqrequest)
 		return &admissionreview.ValidateResult{
 			Allow:  false,
 			Status: status,
@@ -31,7 +30,6 @@ func TestMutatingReviewAllowed(t *testing.T) {
 	assert.Nil(t, err)
 
 	resourceMutaterMock := func(request *dataType) (*admissionreview.ValidateResult, *admissionreview.Patch[dataType]) {
-		//assert.Equal(t, *arRequest, *reqrequest)
 		return &admissionreview.ValidateResult{
 				Allow: true,
 			}, &admissionreview.Patch[dataType]{

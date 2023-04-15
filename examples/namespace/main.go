@@ -16,18 +16,14 @@ var tlsCrt = flag.String("tls_crt", "", "Path to the tls certificate")
 var tlsPrivKey = flag.String("tls_priv_key", "", "Path to the tls private key")
 
 func main() {
-	setupHttpHandles()
-	serveHttp()
-}
-
-// parseInputs read the TLS flags from command line and checks their consistency.
-func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	flag.Parse()
 	if (*tlsCrt != "" && *tlsPrivKey == "") || (*tlsCrt == "" && *tlsPrivKey != "") {
 		log.Fatal().Msg("Inconsistent configuration. Either specify both the tls-crt and tls-priv-key or neither.")
 	}
+	setupHttpHandles()
+	serveHttp()
 }
 
 // handleHealthCheck provides a simple health handle that always returns HTTP 200 for GET requests.

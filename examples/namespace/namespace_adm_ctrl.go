@@ -30,8 +30,9 @@ var labelAbsentValidationError = &admissionreview.ValidateResult{
 	},
 }
 
-// namespaceLabelMutater is an example struct that implements the admissionreview.ResourceMutater and admissionreview.ResourceValidator interfaces
-// to add a namespaceLabelKey if absent.
+// namespaceLabelMutater is an example struct that implements the admissionreview.ResourceMutater and admissionreview.ResourceValidator
+// functions. This implementation adds a namespaceLabelKey if absent. We only use a struct for illustrative purposes.
+// This very basic example would also work with just two pure functions.
 type namespaceLabelMutater struct{}
 
 // Patch implements the admissionreview.ResourceMutater interface and serves as an example implementation to add a namespaceLabelKey if absent.

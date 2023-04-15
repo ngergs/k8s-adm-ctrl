@@ -7,7 +7,7 @@ Library function to build an [admission controller](https://kubernetes.io/docs/r
 The compiled binary is around 14MB and the example docker image is around 16MB.
 
 ## Example application
-The [namespace admission controller](examples/cmd/namespace) is an example implementation of the ResourceMutater and ResourceValidator functions.
+The [namespace admission controller](examples/namespace) is an example implementation of the ResourceMutater and ResourceValidator functions.
 
 As the wrapping in the corresponding Review interface implementation also implements the http.Handler interface usage together with the http package is simple:
 ```go
