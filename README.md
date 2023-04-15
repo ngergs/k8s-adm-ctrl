@@ -6,8 +6,15 @@ Library function to build an [admission controller](https://kubernetes.io/docs/r
 
 The compiled binary is around 14MB and the example docker image is around 16MB.
 
-## Helm chart
-To actually deploy the admission controller [helm example](examples/helm) provides a Helm chart with a more detailed Readme regarding the deployment.
+## Example application
+The [namespace admission controller](examples/cmd/namespace) is an example implementation of the ResourceMutater and ResourceValidator functions.
+
+As the wrapping in the corresponding Review interface implementation also implements the http.Handler interface usage together with the http package is simple:
+```go
+mutater := &NamespaceLabelMutater{}
+http.Handle("/mutate", admissionreview.MutatingReviewer(mutater.Patch, compatibleGroupVersionKind))
+http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate, compatibleGroupVersionKind))
+```
 
 ## Interfaces
 ### Reviewer
@@ -31,15 +38,8 @@ type ResourceMutater[T any] func(request *T) (*ValidateResult, *Patch[T])
 type ResourceValidator[T any] func(request *T) *ValidateResult
 ```
 
-## Example application
-The [namespace admission controller](examples/cmd/namespace) is an example implementation of the ResourceMutater and ResourceValidator functions.
-
-As the wrapping in the corresponding Review interface implementation also implements the http.Handler interface usage together with the http package is simple:
-```go
-mutater := &NamespaceLabelMutater{}
-http.Handle("/mutate", admissionreview.MutatingReviewer(mutater.Patch, compatibleGroupVersionKind))
-http.Handle("/validate", admissionreview.ValidatingReviewer(mutater.Validate, compatibleGroupVersionKind))
-```
+## Helm chart
+To actually deploy the admission controller [helm example](examples/helm) provides a Helm chart with a more detailed Readme regarding the deployment.
 
 ## Dockerfile
 The [example Dockerfile](examples/build/Dockerfile) builds the application using the official golang alpine image and then copies the statically linked application binary into an distroless image which ends up at around ~16MB image size.
