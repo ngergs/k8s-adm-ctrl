@@ -1,0 +1,14 @@
+FROM golang:1.20-alpine as build-container
+COPY . /root/app
+WORKDIR /root/app
+
+RUN ls && apk --no-cache add git && \
+  go install github.com/google/go-licenses@latest && \
+  CGO_ENABLED=0 GOOD=linux GOARCH=amd64 go build -a --ldflags '-s -w' -o namespace-adm-ctrl ./examples/namespace && \
+  go-licenses save ./... --save_path=legal
+
+FROM gcr.io/distroless/static:nonroot
+COPY --from=build-container /root/app/namespace-adm-ctrl /app/namespace-adm-ctrl
+COPY --from=build-container /root/app/legal /app/legal
+ENTRYPOINT ["/app/namespace-adm-ctrl","-port","10250"]
+CMD []
