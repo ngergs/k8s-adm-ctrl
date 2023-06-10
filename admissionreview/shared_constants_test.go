@@ -13,7 +13,7 @@ type dataType struct {
 
 var data = []byte("{\"test\":\"123\"}")
 var dataMutated = []byte("{\"test\":\"123\", \"test2\":\"234\"}")
-var dataPatch = []byte("[{\"op\":\"add\",\"path\":\"/test2\",\"value\":\"234\"}]")
+var dataPatch = []byte("[{\"value\":\"234\",\"op\":\"add\",\"path\":\"/test2\"}]")
 
 var groupVersionKind = &metav1.GroupVersionKind{
 	Group:   "",
